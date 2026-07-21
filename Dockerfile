@@ -5,32 +5,32 @@ RUN apk add --no-cache openssl
 
 WORKDIR /app
 
-# Install & Build Backend
+# Build Backend
 COPY backend/package*.json ./backend/
-COPY backend/prisma ./backend/prisma/
-RUN cd backend && npm install
+COPY backend/prisma/ ./backend/prisma/
+RUN cd backend && npm install && npx prisma generate
 COPY backend/ ./backend/
-RUN cd backend && npx prisma generate && npm run build
+RUN cd backend && npm run build
 
-# Install & Build Frontend
+# Build Frontend
 COPY frontend/package*.json ./frontend/
 RUN cd frontend && npm install
 COPY frontend/ ./frontend/
 RUN cd frontend && npm run build
 
+# Runner Stage
 FROM node:20-alpine AS runner
 
 RUN apk add --no-cache openssl
 
 WORKDIR /app
 
-COPY backend/package*.json ./backend/
-COPY backend/prisma ./backend/prisma/
-RUN cd backend && npm install --only=production
-
+# Copy built backend code and node_modules
 COPY --from=builder /app/backend/dist ./dist
-COPY --from=builder /app/backend/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/backend/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder /app/backend/node_modules ./node_modules
+COPY --from=builder /app/backend/prisma ./prisma
+
+# Copy built frontend static files
 COPY --from=builder /app/frontend/dist ./frontend/dist
 
 EXPOSE 5000

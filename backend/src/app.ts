@@ -24,7 +24,21 @@ app.use('/api', apiRateLimiter);
 // Static uploads serving
 app.use('/uploads', express.static(path.join(__dirname, '../../uploads')));
 
-// Health check endpoint
+// Root landing & Health check endpoints
+app.get('/', (req, res) => {
+  res.status(200).json({
+    name: 'FundRaise Pro Backend API',
+    status: 'UP',
+    version: '1.0.0',
+    endpoints: {
+      health: '/health',
+      campaigns: '/api/campaigns',
+      categories: '/api/campaigns/categories',
+    },
+    timestamp: new Date(),
+  });
+});
+
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'UP', message: 'FundRaise Pro Backend Operational', timestamp: new Date() });
 });
